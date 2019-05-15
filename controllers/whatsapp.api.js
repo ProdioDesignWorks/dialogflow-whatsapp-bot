@@ -1,5 +1,5 @@
 const { uuid, } = require('../package-manager');
-const { PROJECT, } = require('../configs');
+const { PROJECT_ID, } = require('../configs');
 const { queryDialogflow } = require('./dialogflow.api');
 const { sendWhatsAppMessage } = require('../api-service');
 
@@ -30,7 +30,7 @@ async function whatsAppInquiry(req, res){
 async function whatsAppProcessQuery(senderName, number, text){
 	try{
 		const sessionId = uuid();
-		const response = await queryDialogflow(projectId, sessionId, text);
+		const response = await queryDialogflow(PROJECT_ID, sessionId, text);
 		if(response === null){
 			throw new Error(`DialogFlow didn't respond well.`)
 		}else{
