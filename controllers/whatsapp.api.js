@@ -8,9 +8,15 @@ async function whatsAppInquiry(req, res){
 		const { body: reqBody } = req;
 		const { messages } = reqBody;
 
+
 		if(messages.length){
 			const message = messages[0];
-			const { body, senderName, chatName } = message;
+			const { body, senderName, chatName, fromMe } = message;
+
+			if (fromMe) {
+				//This message was triggered by whatsapp bot
+				return res.status(200).send('Self triggered message, ignored!');
+			}
 
 			// Remove all white spaces from number
 			const senderNumber = chatName.replace(/ /g,'');
