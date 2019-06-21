@@ -37,7 +37,8 @@ async function whatsAppInquiry(req, res){
 async function whatsAppProcessQuery(senderName, number, text){
 	try{
 		const projectId = playydateUsers.includes(number) ? PLAYYDATE_PROJECT_ID : TRADEWIZER_PROJECT_ID;
-		const sessionId = uuid();
+		// const sessionId = uuid();
+		const sessionId = number;
 
 		const response = await queryDialogflow(projectId, sessionId, text);
 
