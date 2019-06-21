@@ -1,4 +1,5 @@
 const { dialogflow, } = require('../package-manager');
+const { googleConfigs } = require('../configs');
 
 /**
  * Send a query to the dialogflow agent, and return the query result.
@@ -7,7 +8,11 @@ const { dialogflow, } = require('../package-manager');
 async function queryDialogflow(projectId = '', sessionId = '', query) {
   try{
     // Create a new session
-    const sessionClient = new dialogflow.SessionsClient();
+    const googleConfig = googleConfigs[projectId];
+    console.log("query would be switched to %s bot", projectId);
+    const sessionClient = new dialogflow.SessionsClient({
+      credentials: googleConfig
+    });
     const sessionPath = sessionClient.sessionPath(projectId, sessionId);
 
     // The text query request.

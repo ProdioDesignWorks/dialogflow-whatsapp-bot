@@ -1,7 +1,8 @@
 const { uuid, } = require('../package-manager');
-const { PROJECT_ID, } = require('../configs');
+const { PLAYYDATE_PROJECT_ID, TRADEWIZER_PROJECT_ID, } = require('../configs');
 const { queryDialogflow } = require('./dialogflow.api');
 const { sendWhatsAppMessage } = require('../api-service');
+const playydateUsers = require('../configs/play-date-users.json');
 
 async function whatsAppInquiry(req, res){
 	try{
@@ -35,8 +36,11 @@ async function whatsAppInquiry(req, res){
 
 async function whatsAppProcessQuery(senderName, number, text){
 	try{
+		const projectId = playydateUsers.includes(number) ? PLAYYDATE_PROJECT_ID : TRADEWIZER_PROJECT_ID;
 		const sessionId = uuid();
-		const response = await queryDialogflow(PROJECT_ID, sessionId, text);
+
+		const response = await queryDialogflow(projectId, sessionId, text);
+
 		if(response === null){
 			throw new Error(`DialogFlow didn't respond well.`)
 		}else{
@@ -50,8 +54,6 @@ async function whatsAppProcessQuery(senderName, number, text){
 
 async function whatsAppSendMessage(number, message){
 	try{
-		console.log(`number: ${number}`);
-		console.log(`message: ${message}`);
 		const { data } = await sendWhatsAppMessage(number, message);
 		const { sent } = data;
 		if (sent) {
