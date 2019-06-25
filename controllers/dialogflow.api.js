@@ -1,18 +1,18 @@
 const { dialogflow, } = require('../package-manager');
-const { googleConfigs } = require('../configs');
+const { businessBotsConfig, } = require('../configs');
 
 /**
  * Send a query to the dialogflow agent, and return the query result.
- * @param {string} projectId The project to be used
+ * @param {string} businessId The Business to be used
  */
-async function queryDialogflow(projectId = '', sessionId = '', query) {
+async function queryDialogflow(businessId = '', sessionId = '', query) {
   try{
     // Create a new session
-    const googleConfig = googleConfigs[projectId];
+    const googleConfig = businessBotsConfig[businessId];
+    const { project_id: projectId } = googleConfig;
     console.log("query would be switched to %s bot", projectId);
-    const sessionClient = new dialogflow.SessionsClient({
-      credentials: googleConfig
-    });
+
+    const sessionClient = new dialogflow.SessionsClient({ credentials: googleConfig });
     const sessionPath = sessionClient.sessionPath(projectId, sessionId);
 
     // The text query request.
@@ -53,4 +53,4 @@ async function queryDialogflow(projectId = '', sessionId = '', query) {
   }
 }
 
-exports.queryDialogflow = (projectId, sessionId, query) => queryDialogflow(projectId, sessionId, query);
+exports.queryDialogflow = (businessId, sessionId, query) => queryDialogflow(businessId, sessionId, query);
