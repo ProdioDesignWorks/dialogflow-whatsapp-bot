@@ -31,7 +31,8 @@ async function whatsAppInquiry(req, res){
 			return res.status(400).send('No new messages received');
 		}
 	} catch (error) {
-		return res.status(500).send(error);
+		const message = error.message || 'Something went wrong!';
+		return res.status(500).send(message);
 	}
 }
 
