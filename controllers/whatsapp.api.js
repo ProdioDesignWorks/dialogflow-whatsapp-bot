@@ -36,6 +36,15 @@ async function whatsAppInquiry(req, res){
 	}
 }
 
+function getErrorStatus(error){
+	try {
+		const statusCode = error.response.status;
+		return statusCode;
+	} catch(error) {
+		return 500;
+	}
+}
+
 async function fetchBusiness(number){
 	try{
 		if(playydateUsers.includes(number)){
@@ -60,6 +69,15 @@ async function fetchBusiness(number){
 			return { businessId }; 
 		}
 	} catch (error) {
+		/**
+		*	This subscriber is not registered with any business, So redirect the inquiry to tradewizer bot.
+		*	This done with an intention to keep existing config intact, 
+		*        where all numbers are considered as TW subscribers
+		**/
+		if (getErrorStatus(error) === 404) {
+			return { businessId: 'TRADE_WIZER' }; 
+		}
+		
 		throw error;
 	}
 }
@@ -67,6 +85,7 @@ async function fetchBusiness(number){
 async function whatsAppProcessQuery(senderName, number, text){
 	try{
 		const business = await fetchBusiness(number);
+		console.log(business);
 		const { businessId } = business;
 		// const sessionId = uuid();
 		const sessionId = number;
@@ -80,6 +99,7 @@ async function whatsAppProcessQuery(senderName, number, text){
 			return fulfillmentText;
 		}
 	} catch (error) {
+		console.log(error);
 		throw error;
 	}
 }
