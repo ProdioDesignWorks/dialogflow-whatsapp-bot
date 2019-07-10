@@ -1,0 +1,35 @@
+{
+  "name": "dialogflow-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot built using dialog flow.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProdioDesignWorks/dialogflow-whatsapp-bot.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "whatsapp",
+    "bot",
+    "dialog",
+    "flow",
+    "whatsapp",
+    "bot"
+  ],
+  "author": "Pawan Wagh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ProdioDesignWorks/dialogflow-whatsapp-bot/issues"
+  },
+  "homepage": "https://github.com/ProdioDesignWorks/dialogflow-whatsapp-bot#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.19.0",
+    "dialogflow": "^0.9.0",
+    "express": "^4.16.4",
+    "uuid": "^3.3.2"
+  }
+}
