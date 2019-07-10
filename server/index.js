@@ -1,18 +1,24 @@
 const app = require('./app');
-const { whatsAppInquiry } = require('../controllers/whatsapp.api');
+const defaultRoutes = require('../routes/default.routes');
+const whatsAppRoutes = require('../routes/whatsapp.routes');
 
 function serverStarted(){
-	console.log(`server started on port ${app.get('port')}`);
+	console.log(`server started on port ${port}`);
 }
 
-function ping(req, res){
-	res.send('It works!');
-}
+/**
+ * Grab the application port number
+ */
+const port = app.get('port');
 
-app.get('/', ping);
+/**
+ * Register the application routes
+ */
+app.use('/', defaultRoutes);
+app.use('/ping', defaultRoutes);
+app.use('/whatsapp', whatsAppRoutes);
 
-app.get('/ping', ping);
-
-app.post('/whatsapp/query', whatsAppInquiry);
-
-app.listen(app.get('port'), serverStarted);
+/**
+ * Launch the application server
+ */
+app.listen(port, serverStarted);

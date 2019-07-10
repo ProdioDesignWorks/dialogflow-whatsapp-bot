@@ -4,6 +4,8 @@ const { businessBotsConfig, } = require('../configs');
 /**
  * Send a query to the dialogflow agent, and return the query result.
  * @param {string} businessId The Business to be used
+ * @param {string} sessionId  Unique session id for that whatsapp user
+ * @param {string} query      Text message asked by whatsapp user
  */
 async function queryDialogflow(businessId = '', sessionId = '', query) {
   try{

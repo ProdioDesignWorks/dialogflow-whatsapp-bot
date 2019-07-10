@@ -15,7 +15,6 @@ whatsAppClient.defaults.params = {
 	token: WHATSAPP_SERVICE_TOKEN
 };
 
-
 const tradeWizerClient = axios.create({
 	baseURL: TRADE_WIZER_API_BASE_PATH,
 	headers: {

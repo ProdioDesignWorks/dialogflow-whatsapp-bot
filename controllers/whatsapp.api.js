@@ -2,7 +2,14 @@ const { uuid, } = require('../package-manager');
 const { queryDialogflow } = require('./dialogflow.api');
 const { sendWhatsAppMessage, fetchSubscriberBusiness } = require('../apis');
 const playydateUsers = require('../configs/play-date-users.json');
+const { getErrorStatus, isIndianPhoneNumber, } = require('../utilities');
 
+/**
+ * Accepts request from whatsapp server and process the inquiry.
+ * This API processes the whatsapp inquiry of a subscriber
+ * @param {object} req express request object
+ * @param {object} res express response object
+ */
 async function whatsAppInquiry(req, res){
 	try{
 		const { body: reqBody } = req;
@@ -14,7 +21,7 @@ async function whatsAppInquiry(req, res){
 
 			if (fromMe) {
 				//This message was triggered by whatsapp bot because
-				//If i send msg to someone, then also it's treated as an event and sent on this webhook
+				//If I'll send msg to someone, then also it's treated as an event and sent on this webhook
 				//which results in an infinite loop or recursion
 				return res.status(200).send('Self triggered message, ignored!');
 			}
@@ -24,7 +31,7 @@ async function whatsAppInquiry(req, res){
 			const number = senderNumber.substring(3, senderNumber.length);
 
 			const queryResponse = await whatsAppProcessQuery(senderName, number, body);
-			const sendResponse = await whatsAppSendMessage(senderNumber, queryResponse);
+			const sendResponse = await sendMessageOnWhatsApp(senderNumber, queryResponse);
 
 			return res.status(200).send('Ok');
 		} else {
@@ -36,15 +43,41 @@ async function whatsAppInquiry(req, res){
 	}
 }
 
-function getErrorStatus(error){
-	try {
-		const statusCode = error.response.status;
-		return statusCode;
-	} catch(error) {
-		return 500;
+/**
+ * Sends a text message to Whatsapp number
+ * @param {object} req express request object
+ * @param {object} res express response object
+ */
+async function whatsAppSendMessage(req, res){
+	try{
+		const { body } = req;
+		const { number = '', message = '' } = body;
+
+		if (!message.length) {
+			return res.status(400).send('Empty message');
+		}
+
+		if (!isIndianPhoneNumber(number)) {
+			return res.status(400).send('Invalid contact number');
+		}
+
+		if (number.includes('+91')) {
+			await sendMessageOnWhatsApp(number, message);
+			return res.status(200).send('Ok');	
+		} else {
+			await sendMessageOnWhatsApp(`+91${number}`, message);
+			return res.status(200).send('Ok');
+		}
+	} catch (error) {
+		const message = error.message || 'Something went wrong!';
+		return res.status(500).send(message);
 	}
 }
 
+/**
+ * Fetches the business of Whatsapp subscriber
+ * @param {string} number     Whatapp number of the subscriber
+ */
 async function fetchBusiness(number){
 	try{
 		if(playydateUsers.includes(number)){
@@ -82,12 +115,18 @@ async function fetchBusiness(number){
 	}
 }
 
+/**
+ * Processes the whatsapp inquiry from the subscriber by routing it to dialogflow bot
+ * @param {string} senderName Name of the Whatsapp subscriber
+ * @param {string} number     Whatapp number of the subscriber
+ * @param {string} text       text message received from Whatsapp number i.e. from Whatsapp subscriber
+ */
 async function whatsAppProcessQuery(senderName, number, text){
 	try{
 		const business = await fetchBusiness(number);
-		console.log(business);
 		const { businessId } = business;
 		// const sessionId = uuid();
+		// Using whatsapp number as session id ensures we keep the context intact, across the conversation
 		const sessionId = number;
 
 		const response = await queryDialogflow(businessId, sessionId, text);
@@ -104,7 +143,12 @@ async function whatsAppProcessQuery(senderName, number, text){
 	}
 }
 
-async function whatsAppSendMessage(number, message){
+/**
+ * Sends a text message to Whatsapp number
+ * @param {string} number  Whatapp number on which message has to be delivered
+ * @param {string} message text message
+ */
+async function sendMessageOnWhatsApp(number, message){
 	try{
 		const { data } = await sendWhatsAppMessage(number, message);
 		const { sent } = data;
@@ -118,4 +162,5 @@ async function whatsAppSendMessage(number, message){
 	}
 }
 
-exports.whatsAppInquiry = (req, res) => whatsAppInquiry(req, res)
+exports.whatsAppInquiry = (req, res) => whatsAppInquiry(req, res);
+exports.whatsAppSendMessage = (req, res) => whatsAppSendMessage(req, res);
