@@ -10,7 +10,7 @@ const { getErrorStatus, isIndianPhoneNumber, } = require('../utilities');
  * @param {object} req express request object
  * @param {object} res express response object
  */
-async function whatsAppInquiry(req, res){
+async function whatsAppInquiry(req, res) {
 	try{
 		const { body: reqBody } = req;
 		const { messages } = reqBody;
@@ -30,7 +30,7 @@ async function whatsAppInquiry(req, res){
 			const senderNumber = chatName.replace(/ /g,'');
 			const number = senderNumber.substring(3, senderNumber.length);
 
-			const queryResponse = await whatsAppProcessQuery(senderName, number, body);
+			const queryResponse = await whatsAppProcessQuery({ senderName, number, text: body });
 			const sendResponse = await sendMessageOnWhatsApp(senderNumber, queryResponse);
 
 			return res.status(200).send('Ok');
@@ -48,7 +48,7 @@ async function whatsAppInquiry(req, res){
  * @param {object} req express request object
  * @param {object} res express response object
  */
-async function whatsAppSendMessage(req, res){
+async function whatsAppSendMessage(req, res) {
 	try{
 		const { body } = req;
 		const { number = '', message = '' } = body;
@@ -61,13 +61,12 @@ async function whatsAppSendMessage(req, res){
 			return res.status(400).send('Invalid contact number');
 		}
 
-		if (number.includes('+91')) {
-			await sendMessageOnWhatsApp(number, message);
-			return res.status(200).send('Ok');	
-		} else {
-			await sendMessageOnWhatsApp(`+91${number}`, message);
-			return res.status(200).send('Ok');
-		}
+		// To extract only contact number from a number even if country code is present
+		//Works for +91, 91, and, 0
+		const contactNumber = number.slice(-10);
+
+		await sendMessageOnWhatsApp(`+91${contactNumber}`, message);
+		return res.status(200).send('Ok');
 	} catch (error) {
 		const message = error.message || 'Something went wrong!';
 		return res.status(500).send(message);
@@ -78,7 +77,7 @@ async function whatsAppSendMessage(req, res){
  * Fetches the business of Whatsapp subscriber
  * @param {string} number     Whatapp number of the subscriber
  */
-async function fetchBusiness(number){
+async function fetchBusiness(number) {
 	try{
 		if(playydateUsers.includes(number)){
 			return { businessId: 'PLAYY_DATE' }; 
@@ -121,7 +120,7 @@ async function fetchBusiness(number){
  * @param {string} number     Whatapp number of the subscriber
  * @param {string} text       text message received from Whatsapp number i.e. from Whatsapp subscriber
  */
-async function whatsAppProcessQuery(senderName, number, text){
+async function whatsAppProcessQuery({ senderName = '', number, text = ''}) {
 	try{
 		const business = await fetchBusiness(number);
 		const { businessId } = business;
@@ -148,7 +147,7 @@ async function whatsAppProcessQuery(senderName, number, text){
  * @param {string} number  Whatapp number on which message has to be delivered
  * @param {string} message text message
  */
-async function sendMessageOnWhatsApp(number, message){
+async function sendMessageOnWhatsApp(number, message) {
 	try{
 		const { data } = await sendWhatsAppMessage(number, message);
 		const { sent } = data;
@@ -162,5 +161,40 @@ async function sendMessageOnWhatsApp(number, message){
 	}
 }
 
+/**
+ * Accepts request from the service
+ * This API initializes the whatsapp conversation by sending the msg first to bot and,
+ * forwarding the bot reply to specific user
+ * @param {object} req express request object
+ * @param {object} res express response object
+ */
+async function whatsAppStartCoversation(req, res) {
+	try {
+		const { body } = req;
+		const { number = '', message = '' } = body;
+
+		if (!message.length) {
+			return res.status(400).send('Empty message');
+		}
+
+		if (!isIndianPhoneNumber(number)) {
+			return res.status(400).send('Invalid contact number');
+		}
+
+		// To extract only contact number from a number even if country code is present
+		//Works for +91, 91, and, 0
+		const contactNumber = number.slice(-10);
+
+		const queryResponse = await whatsAppProcessQuery({ number: contactNumber, text: message });
+		const sendResponse = await sendMessageOnWhatsApp(`+91${contactNumber}`, queryResponse);
+		
+		return res.status(200).send('Ok');
+	} catch (error) {
+		const message = error.message || 'Internal Server Error';
+		return res.status(500).send(message);
+	}
+}
+
 exports.whatsAppInquiry = (req, res) => whatsAppInquiry(req, res);
 exports.whatsAppSendMessage = (req, res) => whatsAppSendMessage(req, res);
+exports.whatsAppStartCoversation = (req, res) => whatsAppStartCoversation(req, res);
