@@ -10,13 +10,15 @@ function getErrorStatus(error) {
 function isIndianPhoneNumber(number) {
 	try {
 		/**
-		 * 1) starts with 7 or 8 or 9. 
-		 * 2) contains 9 digits 
+		 * 1) Matches country code
+		 * 2) starts with 7 or 8 or 9. 
+		 * 3) contains 9 digits 
 		 */
-		if(number.length > 10){
+		if(number.length < 10){
 			return false;
 		}
-		const pattern = new RegExp("[7-9][0-9]{9}");
+		// const pattern = new RegExp("[7-9][0-9]{9}");
+		const pattern = new RegExp("([0|\+[0-9]{1,5})?([7-9][0-9]{9})");
 		return pattern.test(number);
 	} catch (error) {
 		throw error;

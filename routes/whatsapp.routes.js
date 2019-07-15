@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router = express.Router();
-const { whatsAppInquiry, whatsAppSendMessage } = require('../controllers/whatsapp.api');
+const { whatsAppInquiry, whatsAppSendMessage, whatsAppStartCoversation } = require('../controllers/whatsapp.api');
 
 /**
  * Whatsapp query API weebhook
@@ -9,5 +9,7 @@ const { whatsAppInquiry, whatsAppSendMessage } = require('../controllers/whatsap
 router.post('/query', whatsAppInquiry);
 
 router.post('/send', whatsAppSendMessage);
+
+router.post('/conversation/start', whatsAppStartCoversation);
 
 module.exports = router;
