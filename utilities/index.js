@@ -1,3 +1,5 @@
+const { url, path } = require('../package-manager');
+
 function getErrorStatus(error) {
 	try {
 		const statusCode = error.response.status;
@@ -25,5 +27,11 @@ function isIndianPhoneNumber(number) {
 	}
 }
 
+function getFileName(fileUrl) {
+	const parsed = url.parse(fileUrl);
+	return path.basename(parsed.pathname);
+}
+
 exports.getErrorStatus = (error) => getErrorStatus(error);
 exports.isIndianPhoneNumber = (number) => isIndianPhoneNumber(number);
+exports.getFileName = (url) => getFileName(url);

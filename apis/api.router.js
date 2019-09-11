@@ -2,6 +2,10 @@ exports.whatsAppRouter = {
 	SEND_MESSAGE: {
 		URL: `/sendMessage`,
 		METHOD: `POST`,
+	},
+	SEND_FILE: {
+		URL: `/sendFile`,
+		METHOD: `POST`,
 	}
 }
 

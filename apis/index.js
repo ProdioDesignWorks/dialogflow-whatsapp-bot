@@ -12,6 +12,18 @@ const sendWhatsAppMessage = (number, text) => (
 	})
 );
 
+const sendWhatsAppFileMessage = (number, fileName, file) => (
+	whatsAppClient({
+		method: whatsAppRouter.SEND_FILE.METHOD,
+		url: whatsAppRouter.SEND_FILE.URL,
+		data: {
+			phone: number,
+			body: file,
+			filename: fileName
+		}
+	})
+);
+
 const fetchSubscriberBusiness = (mobile = '') => (
 	tradeWizerClient({
 		method: tradeWizerRouter.FETCH_BUSINESS_FROM_PHONE_NUMBER.METHOD,
@@ -21,4 +33,5 @@ const fetchSubscriberBusiness = (mobile = '') => (
 );
 
 exports.sendWhatsAppMessage = (number, text) => sendWhatsAppMessage(number, text);
+exports.sendWhatsAppFileMessage = (number, fileName, file) => sendWhatsAppFileMessage(number, fileName, file);
 exports.fetchSubscriberBusiness = (mobile = '') => fetchSubscriberBusiness(mobile);

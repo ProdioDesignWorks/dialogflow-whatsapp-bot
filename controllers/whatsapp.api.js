@@ -1,8 +1,8 @@
 const { uuid, } = require('../package-manager');
 const { queryDialogflow } = require('./dialogflow.api');
-const { sendWhatsAppMessage, fetchSubscriberBusiness } = require('../apis');
+const { sendWhatsAppMessage, sendWhatsAppFileMessage, fetchSubscriberBusiness } = require('../apis');
 const playydateUsers = require('../configs/play-date-users.json');
-const { getErrorStatus, isIndianPhoneNumber, } = require('../utilities');
+const { getErrorStatus, isIndianPhoneNumber, getFileName } = require('../utilities');
 
 /**
  * Accepts request from whatsapp server and process the inquiry.
@@ -66,6 +66,41 @@ async function whatsAppSendMessage(req, res) {
 		const contactNumber = number.slice(-10);
 
 		await sendMessageOnWhatsApp(`+91${contactNumber}`, message);
+		return res.status(200).send('Ok');
+	} catch (error) {
+		const message = error.message || 'Something went wrong!';
+		return res.status(500).send(message);
+	}
+}
+
+/**
+ * Sends a file to Whatsapp number
+ * @param {object} req express request object
+ * @param {object} res express response object
+ */
+async function whatsAppSendFile(req, res) {
+	try{
+		const { body } = req;
+		const { number = '', file = '', fileName = '' } = body;
+
+		if (!isIndianPhoneNumber(number)) {
+			return res.status(400).send('Invalid contact number');
+		}
+
+		if (!file.length) {
+			return res.status(400).send('Invalid file');	
+		}
+
+		let generatedFileName = fileName;
+		if (!fileName.length) {
+			generatedFileName = getFileName(file);
+		}
+
+		// To extract only contact number from a number even if country code is present
+		//Works for +91, 91, and, 0
+		const contactNumber = number.slice(-10);
+
+		await sendWhatsAppFileMessage(`+91${contactNumber}`, generatedFileName, file);
 		return res.status(200).send('Ok');
 	} catch (error) {
 		const message = error.message || 'Something went wrong!';
@@ -198,3 +233,4 @@ async function whatsAppStartCoversation(req, res) {
 exports.whatsAppInquiry = (req, res) => whatsAppInquiry(req, res);
 exports.whatsAppSendMessage = (req, res) => whatsAppSendMessage(req, res);
 exports.whatsAppStartCoversation = (req, res) => whatsAppStartCoversation(req, res);
+exports.whatsAppSendFile = (req, res) => whatsAppSendFile(req, res);
