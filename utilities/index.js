@@ -1,4 +1,4 @@
-const { url, path } = require('../package-manager');
+const { url, path, fs } = require('../package-manager');
 
 function getErrorStatus(error) {
 	try {
@@ -30,6 +30,19 @@ function isIndianPhoneNumber(number) {
 function getFileName(fileUrl) {
 	const parsed = url.parse(fileUrl);
 	return path.basename(parsed.pathname);
+}
+
+function readFile(fp, encoding = '') {
+	const bitmap = fs.readFileSync(fp);
+	if (encoding && encoding.length) {
+		return new Buffer(bitmap).toString(encoding);
+	} else {
+		return new Buffer(bitmap);
+	}
+}
+
+function deleteFile(fp) {
+	fs.unlinkSync(fp);
 }
 
 exports.getErrorStatus = (error) => getErrorStatus(error);

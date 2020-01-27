@@ -4,6 +4,10 @@ const { sendWhatsAppMessage, sendWhatsAppFileMessage, fetchSubscriberBusiness } 
 const playydateUsers = require('../configs/play-date-users.json');
 const { getErrorStatus, isIndianPhoneNumber, getFileName } = require('../utilities');
 
+const executeSerially = funcs =>
+    funcs.reduce((promise, func) =>
+        promise.then(result => func().then(Array.prototype.concat.bind(result))), Promise.resolve([]))
+
 /**
  * Accepts request from whatsapp server and process the inquiry.
  * This API processes the whatsapp inquiry of a subscriber
@@ -17,7 +21,7 @@ async function whatsAppInquiry(req, res) {
 
 		if(messages.length){
 			const message = messages[0];
-			const { body, senderName, chatName, fromMe } = message;
+			const { body, senderName, chatName, fromMe, chatId } = message;
 
 			if (fromMe) {
 				//This message was triggered by whatsapp bot because
@@ -27,17 +31,24 @@ async function whatsAppInquiry(req, res) {
 			}
 
 			// Remove all white spaces from number
-			const senderNumber = chatName.replace(/ /g,'');
-			const number = senderNumber.substring(3, senderNumber.length);
+			// const senderNumber = chatName.replace(/ /g,'');
+			// const number = senderNumber.substring(3, senderNumber.length);
+			
+			const senderNumber = chatId.split('@')[0];
+			const number = senderNumber.substring(2, senderNumber.length);
 
-			const queryResponse = await whatsAppProcessQuery({ senderName, number, text: body });
-			const sendResponse = await sendMessageOnWhatsApp(senderNumber, queryResponse);
+			const queryResponses = await whatsAppProcessQuery({ senderName, number, text: body });
+			const seriesExecution = queryResponses.map(
+				queryResponse => () => sendMessageOnWhatsApp(`+91${number}`, queryResponse.fulfillmentText)
+			);
+			await executeSerially(seriesExecution);
 
 			return res.status(200).send('Ok');
 		} else {
 			return res.status(400).send('No new messages received');
 		}
 	} catch (error) {
+		console.error(error);
 		const message = error.message || 'Something went wrong!';
 		return res.status(500).send(message);
 	}
@@ -168,8 +179,10 @@ async function whatsAppProcessQuery({ senderName = '', number, text = ''}) {
 		if(response === null){
 			throw new Error(`DialogFlow didn't respond well.`)
 		}else{
-			const { queryText, fulfillmentText, intent, } = response;
-			return fulfillmentText;
+			// const { queryText, fulfillmentText, intent, } = response;
+			// return fulfillmentText;
+			console.log("multiple")
+			return response;
 		}
 	} catch (error) {
 		console.log(error);
@@ -184,9 +197,12 @@ async function whatsAppProcessQuery({ senderName = '', number, text = ''}) {
  */
 async function sendMessageOnWhatsApp(number, message) {
 	try{
+		console.log("number:", number);
+		console.log("message:", message);
 		const { data } = await sendWhatsAppMessage(number, message);
 		const { sent } = data;
 		if (sent) {
+			console.log("sent:", sent);
 			return 'Ok';
 		} else {
 			throw new Error('WhatsApp API service not responding!');
@@ -220,8 +236,11 @@ async function whatsAppStartCoversation(req, res) {
 		//Works for +91, 91, and, 0
 		const contactNumber = number.slice(-10);
 
-		const queryResponse = await whatsAppProcessQuery({ number: contactNumber, text: message });
-		const sendResponse = await sendMessageOnWhatsApp(`+91${contactNumber}`, queryResponse);
+		const queryResponses = await whatsAppProcessQuery({ number: contactNumber, text: message });
+		const seriesExecution = queryResponses.map(
+			queryResponse => () => sendMessageOnWhatsApp(`+91${contactNumber}`, queryResponse.fulfillmentText)
+		);
+		await executeSerially(seriesExecution);
 		
 		return res.status(200).send('Ok');
 	} catch (error) {

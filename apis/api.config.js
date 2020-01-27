@@ -36,3 +36,4 @@ const addApiKeyHeader = config => {
 
 exports.whatsAppClient = whatsAppClient;
 exports.tradeWizerClient = tradeWizerClient;
+exports.httpClient = axios;

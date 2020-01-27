@@ -13,6 +13,7 @@ async function queryDialogflow(businessId = '', sessionId = '', query) {
     const googleConfig = businessBotsConfig[businessId];
     const { project_id: projectId } = googleConfig;
     console.log("query would be switched to %s bot", projectId);
+    console.log(`Session Id: ${sessionId}`);
 
     const sessionClient = new dialogflow.SessionsClient({ credentials: googleConfig });
     const sessionPath = sessionClient.sessionPath(projectId, sessionId);
@@ -34,18 +35,24 @@ async function queryDialogflow(businessId = '', sessionId = '', query) {
     const responses = await sessionClient.detectIntent(request);
     console.log('Detected intent');
     const result = responses[0].queryResult;
-    const { queryText, fulfillmentText = '', intent = {} } = result;
+    const { queryText, fulfillmentMessages, fulfillmentText = '', intent = {} } = result;
 
     console.log(`  Query: ${queryText}`);
     console.log(`  Response: ${fulfillmentText}`);
 
     if (intent) {
       console.log(`  Intent: ${intent.displayName}`);
-      return {
-        queryText: queryText,
-        fulfillmentText: fulfillmentText,
+      const dialogflowResponses = fulfillmentMessages.map(fulfillment => ({
+        queryText,
         intent: intent.displayName,
-      };
+        fulfillmentText: fulfillment.text.text[0]
+      }));
+      // return {
+      //   queryText: queryText,
+      //   fulfillmentText: fulfillmentText,
+      //   intent: intent.displayName,
+      // };
+      return dialogflowResponses;
     } else {
       console.log(`  No intent matched.`);
       return null;

@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const url = require("url");
 const path = require("path");
+const fs = require("fs");
 
 module.exports = { 
 	dialogflow: dialogflow, 
@@ -14,4 +15,5 @@ module.exports = {
 	axios: axios,
 	url: url,
 	path: path,
+	fs: fs,
 };
